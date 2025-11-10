@@ -61,6 +61,8 @@ export interface ProcessedAqiData {
 	aqiLevel: string;
 	pm2_5: number;
 	pm10: number;
+	co?: number; // Optional: add if you want it
+	no2?: number; // Optional: add if you want it
 	temperature?: number;
 	humidity?: number;
 	lastUpdate: string;

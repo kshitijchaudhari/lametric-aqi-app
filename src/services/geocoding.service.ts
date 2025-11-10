@@ -30,19 +30,51 @@ class GeocodingService {
 				);
 			}
 
-			// AQICN returns data directly for city search (not array)
-			const stationData = response.data.data;
-			const geo = Array.isArray(stationData)
-				? stationData?.station?.geo
-				: (stationData as any)?.station?.geo;
+			// Cast to any to avoid TypeScript array inference issues
+			const stationData: any = response.data.data;
 
-			if (!geo || !Array.isArray(geo)) {
+			// Initialize geo as undefined
+			let geoArray: number[] | undefined;
+
+			// Check if it's an array and get the first element
+			if (Array.isArray(stationData) && stationData.length > 0) {
+				// Get first station - explicitly typed as any to bypass TypeScript issues
+				const station: any = stationData;
+
+				// Extract geo if station has the expected structure
+				if (
+					station &&
+					station.station &&
+					Array.isArray(station.station.geo)
+				) {
+					geoArray = station.station.geo;
+				}
+			} else if (
+				stationData &&
+				stationData.station &&
+				Array.isArray(stationData.station.geo)
+			) {
+				// If it's not an array, try direct access
+				geoArray = stationData.station.geo;
+			}
+
+			// Validate geo data exists and has 2 elements
+			if (!geoArray || !Array.isArray(geoArray) || geoArray.length < 2) {
 				throw new Error("No geographic data available for city");
 			}
 
+			// Extract and convert to numbers
+			const latitude: number = Number(geoArray);
+			const longitude: number = Number(geoArray);
+
+			// Validate numbers
+			if (isNaN(latitude) || isNaN(longitude)) {
+				throw new Error("Invalid geographic coordinates");
+			}
+
 			return {
-				lat: geo,
-				lon: geo,
+				lat: latitude,
+				lon: longitude,
 				name: cityName,
 				country: "Unknown",
 			};

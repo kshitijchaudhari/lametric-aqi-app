@@ -15,12 +15,20 @@ Features
 Prerequisites
 Node.js 14+ and npm/yarn
 
-OpenWeatherMap API Key (free tier available)
-
-Sign up at https://openweathermap.org/api
-
-Get API key from https://openweathermap.org/api/air-pollution
-
 LaMetric Time Device (produced before 2022, model "LM 37X8")
 
 Internet Connection for both the device and server
+
+Get your own token at https://aqicn.org/city/london/
+Add the token to the .env file in the root of the project.
+
+3 Correct API Endpoints
+By City Name (Recommended)
+
+GET https://api.waqi.info/feed/London/?token=YOUR_TOKEN
+By Station ID (Your example: London)
+
+GET https://api.waqi.info/feed/@5724/?token=YOUR_TOKEN
+By Coordinates
+
+GET https://api.waqi.info/feed/geo:51.5074;-0.1278/?token=YOUR_TOKEN

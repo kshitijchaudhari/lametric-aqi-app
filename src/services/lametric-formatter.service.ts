@@ -3,7 +3,7 @@ import {
 	LaMetricResponse,
 	LaMetricFrame,
 } from "../models/types";
-import { LAMETRIC_ICONS, AQI_ICONS, AQI_LEVELS } from "../utils/constants";
+import { LAMETRIC_ICONS, AQI_ICONS } from "../utils/constants";
 
 class LaMetricFormatterService {
 	/**
@@ -43,23 +43,28 @@ class LaMetricFormatterService {
 			icon: LAMETRIC_ICONS.pm10,
 		});
 
-		// Frame 6: Additional Info (CO)
-		frames.push({
-			text: `CO: ${aqiData.co} µg/m³`,
-			icon: LAMETRIC_ICONS.air_quality,
-		});
-
-		// Frame 7: Additional Info (NO2)
-		frames.push({
-			text: `NO2: ${aqiData.no2} µg/m³`,
-			icon: LAMETRIC_ICONS.air_quality,
-		});
-
-		// Frame 8: Last Update Time
+		// Frame 6: Last Update Time
 		frames.push({
 			text: `Updated: ${aqiData.lastUpdate}`,
 			icon: LAMETRIC_ICONS.aqi,
 		});
+
+		// Frame 7: CO (if available)
+		if (aqiData.co !== undefined) {
+		frames.push({
+			text: `CO: ${aqiData.co} µg/m³`,
+			icon: LAMETRIC_ICONS.air_quality
+		});
+		}
+
+		// Frame 8: NO2 (if available)
+		if (aqiData.no2 !== undefined) {
+		frames.push({
+			text: `NO2: ${aqiData.no2} µg/m³`,
+			icon: LAMETRIC_ICONS.air_quality
+		});
+		}
+
 
 		return { frames };
 	}
