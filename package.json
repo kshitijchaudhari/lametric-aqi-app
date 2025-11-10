@@ -1,7 +1,7 @@
 {
 	"name": "lametric-aqi-app",
-	"version": "1.0.0",
-	"description": "Air Quality Index (AQI) app for LaMetric Time - Display PM2.5, PM10, and AQI levels",
+	"version": "2.0.0",
+	"description": "Air Quality Index (AQI) app for LaMetric Time - 100% Free (AQICN API)",
 	"main": "dist/index.js",
 	"scripts": {
 		"start": "yarn run build && node dist/index.js",
@@ -14,7 +14,9 @@
 		"air-quality",
 		"weather",
 		"pm2.5",
-		"pm10"
+		"pm10",
+		"free",
+		"aqicn"
 	],
 	"author": "Your Name",
 	"license": "MIT",

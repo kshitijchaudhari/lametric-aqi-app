@@ -9,94 +9,41 @@ const router = Router();
  * GET /aqi
  * Query parameters:
  *   - city: City name (e.g., "London", "Mumbai")
- *   - zipcode: Zip/Postal code (e.g., "E14", "10001")
- *   - country: Country code (e.g., "IN", "US", "GB") - optional for city search
- *   - lat: Latitude - alternative to city/zipcode
- *   - lon: Longitude - alternative to city/zipcode
+ *   - lat: Latitude
+ *   - lon: Longitude
  *   - format: Response format - "full" (default), "compact", or "metric"
  */
 router.get("/aqi", async (req: Request, res: Response) => {
 	try {
-		const {
-			city,
-			zipcode,
-			country,
-			lat,
-			lon,
-			format = "compact",
-			countryCode,
-		} = req.query;
+		const { city, lat, lon, format = "compact" } = req.query;
 
-		let latitude: number;
-		let longitude: number;
-		let cityName: string = "";
+		let aqiData;
 
-		// Step 1: Get coordinates
-		if (lat && lon) {
-			// Direct coordinate input
-			latitude = parseFloat(lat as string);
-			longitude = parseFloat(lon as string);
+		// Step 1: Get AQI data based on input method
+		if (city) {
+			// Direct city name search (AQICN supports this)
+			aqiData = await AqiService.getAqiByCity(city as string);
+		} else if (lat && lon) {
+			// Coordinate-based search
+			const latitude = parseFloat(lat as string);
+			const longitude = parseFloat(lon as string);
 
-			// Get city name from coordinates
-			try {
-				const geoData = await GeocodingService.getCityName(
-					latitude,
-					longitude
-				);
-				cityName = `${geoData.name}, ${geoData.country}`;
-			} catch (error) {
-				cityName = `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`;
-			}
-		} else if (zipcode) {
-			// Convert zipcode to coordinates
-			const cc = (countryCode as string) || "US";
-			const geoData = await GeocodingService.getZipcodeCoordinates(
-				zipcode as string,
-				cc
-			);
-			latitude = geoData.lat;
-			longitude = geoData.lon;
-			cityName = `${geoData.name}, ${geoData.country}`;
-		} else if (city) {
-			// Convert city name to coordinates
-			const cc = country as string | undefined;
-			const geoData = await GeocodingService.getCityCoordinates(
-				city as string,
-				cc
-			);
-			latitude = geoData.lat;
-			longitude = geoData.lon;
-			cityName = `${geoData.name}, ${geoData.country}`;
+			await GeocodingService.validateCoordinates(latitude, longitude);
+			aqiData = await AqiService.getAqiData(latitude, longitude);
 		} else {
 			return res.status(400).json({
 				error: "Missing parameters",
 				message:
-					"Please provide either: city name, zipcode, or latitude/longitude coordinates",
+					"Please provide either: city name or latitude/longitude",
 				examples: [
 					"/api/aqi?city=London",
-					"/api/aqi?city=Mumbai&country=IN",
-					"/api/aqi?zipcode=10001&countryCode=US",
+					"/api/aqi?city=Mumbai",
 					"/api/aqi?lat=40.7128&lon=-74.0060",
 				],
 			});
 		}
 
-		// Validate coordinates
-		if (isNaN(latitude) || isNaN(longitude)) {
-			return res.status(400).json({
-				error: "Invalid coordinates",
-				message: "Latitude and longitude must be valid numbers",
-			});
-		}
-
-		// Step 2: Fetch AQI data
-		const aqiData = await AqiService.getAqiData(
-			latitude,
-			longitude,
-			cityName
-		);
-
-		// Step 3: Format for LaMetric display
+		// Step 2: Format for LaMetric display
 		let lametricResponse;
 		const formatType = (format as string).toLowerCase();
 
@@ -111,7 +58,7 @@ router.get("/aqi", async (req: Request, res: Response) => {
 				LaMetricFormatterService.formatAqiCompact(aqiData);
 		}
 
-		// Step 4: Return response
+		// Step 3: Return response
 		res.status(200).json({
 			success: true,
 			data: lametricResponse,
@@ -133,10 +80,10 @@ router.get("/aqi", async (req: Request, res: Response) => {
 				error.message ||
 				"An error occurred while fetching AQI information",
 			troubleshooting: [
-				"Ensure your API key is set correctly",
-				"Check that the city/zipcode/coordinates are valid",
-				"Verify you have network connectivity",
-				"Check OpenWeatherMap API quota limits",
+				"Verify that AQICN_TOKEN is set correctly in .env",
+				"Check that the city name is spelled correctly",
+				"Ensure your internet connection is working",
+				"Verify that the location has air quality monitoring data",
 			],
 		});
 	}
@@ -144,7 +91,6 @@ router.get("/aqi", async (req: Request, res: Response) => {
 
 /**
  * GET /aqi/clear-cache
- * Clear the AQI data cache (for development/force refresh)
  */
 router.get("/aqi/clear-cache", (req: Request, res: Response) => {
 	try {

@@ -1,94 +1,105 @@
 import axios from "axios";
-import { GeocodingResponse, ZipcodeGeocodingResponse } from "../models/types";
-import { OWM_GEO_URL, API_KEYS } from "../utils/constants";
+import { AqicnGeoResponse } from "../models/types";
+import { AQICN_BASE_URL, API_KEYS } from "../utils/constants";
 
 class GeocodingService {
 	/**
-	 * Convert city name to coordinates using OpenWeatherMap Geocoding API
+	 * Search city by name using AQICN API
+	 * Returns station data which includes coordinates
 	 */
-	async getCityCoordinates(
-		cityName: string,
-		countryCode?: string
-	): Promise<GeocodingResponse> {
+	async getCityCoordinates(cityName: string): Promise<{
+		lat: number;
+		lon: number;
+		name: string;
+		country?: string;
+	}> {
 		try {
-			const query = countryCode ? `${cityName},${countryCode}` : cityName;
-			const response = await axios.get<GeocodingResponse[]>(
-				`${OWM_GEO_URL}/direct`,
+			const response = await axios.get<AqicnGeoResponse>(
+				`${AQICN_BASE_URL}/feed/${encodeURIComponent(cityName)}/`,
 				{
 					params: {
-						q: query,
-						limit: 1,
-						appid: API_KEYS.openWeatherMap,
+						token: API_KEYS.aqicn,
 					},
+					timeout: 5000,
 				}
 			);
 
-			if (!response.data || response.data.length === 0) {
-				throw new Error(`City "${cityName}" not found`);
+			if (response.data.status !== "ok" || !response.data.data) {
+				throw new Error(
+					`City "${cityName}" not found in AQICN database`
+				);
 			}
 
-			return response.data;
+			// AQICN returns data directly for city search (not array)
+			const stationData = response.data.data;
+			const geo = Array.isArray(stationData)
+				? stationData?.station?.geo
+				: (stationData as any)?.station?.geo;
+
+			if (!geo || !Array.isArray(geo)) {
+				throw new Error("No geographic data available for city");
+			}
+
+			return {
+				lat: geo,
+				lon: geo,
+				name: cityName,
+				country: "Unknown",
+			};
 		} catch (error: any) {
 			throw new Error(
-				`Geocoding error for city "${cityName}": ${error.message}`
+				`Failed to find city "${cityName}": ${error.message}`
 			);
 		}
 	}
 
 	/**
-	 * Convert zip code to coordinates using OpenWeatherMap Geocoding API
+	 * Get coordinates from latitude/longitude
+	 * (Pass-through, just validates)
 	 */
-	async getZipcodeCoordinates(
-		zipcode: string,
-		countryCode: string = "US"
-	): Promise<ZipcodeGeocodingResponse> {
-		try {
-			const response = await axios.get<ZipcodeGeocodingResponse>(
-				`${OWM_GEO_URL}/zip`,
-				{
-					params: {
-						zip: `${zipcode},${countryCode}`,
-						appid: API_KEYS.openWeatherMap,
-					},
-				}
-			);
-
-			if (!response.data) {
-				throw new Error(`Zipcode "${zipcode}" not found`);
-			}
-
-			return response.data;
-		} catch (error: any) {
-			throw new Error(
-				`Geocoding error for zipcode "${zipcode}": ${error.message}`
-			);
+	async validateCoordinates(
+		lat: number,
+		lon: number
+	): Promise<{
+		lat: number;
+		lon: number;
+		name: string;
+	}> {
+		if (isNaN(lat) || isNaN(lon)) {
+			throw new Error("Invalid coordinates");
 		}
+		if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+			throw new Error("Coordinates out of valid range");
+		}
+		return {
+			lat,
+			lon,
+			name: `${lat.toFixed(2)}, ${lon.toFixed(2)}`,
+		};
 	}
 
 	/**
-	 * Get city name from coordinates (reverse geocoding)
+	 * Search nearby stations by coordinates
 	 */
-	async getCityName(lat: number, lon: number): Promise<GeocodingResponse> {
+	async getNearbyStations(lat: number, lon: number): Promise<any> {
 		try {
-			const response = await axios.get<GeocodingResponse[]>(
-				`${OWM_GEO_URL}/reverse`,
+			const response = await axios.get<AqicnGeoResponse>(
+				`${AQICN_BASE_URL}/feed/geo:${lat};${lon}/`,
 				{
 					params: {
-						lat,
-						lon,
-						limit: 1,
-						appid: API_KEYS.openWeatherMap,
+						token: API_KEYS.aqicn,
 					},
+					timeout: 5000,
 				}
 			);
 
-			if (!response.data || response.data.length === 0) {
-				throw new Error("Location not found for given coordinates");
+			if (response.data.status !== "ok") {
+				throw new Error("No data available for coordinates");
 			}
 
-			return response.data;
+			return response.data.data;
 		} catch (error: any) {
-			throw new Error(`Reverse geocoding error: ${error.message}`);
+			throw new Error(`Geocoding error: ${error.message}`);
 		}
 	}
 }

@@ -1,45 +1,54 @@
 /**
- * Interface for AQI data from OpenWeatherMap API
+ * AQICN API Response Interface
  */
-export interface AqiResponse {
-	coord: number[];
-	list: AqiDataPoint[];
-}
-
-export interface AqiDataPoint {
-	dt: number;
-	main: {
-		aqi: number; // 1=Good, 2=Fair, 3=Moderate, 4=Poor, 5=Very Poor
-	};
-	components: {
-		co: number;
-		no: number;
-		no2: number;
-		o3: number;
-		so2: number;
-		pm2_5: number;
-		pm10: number;
-		nh3: number;
+export interface AqicnResponse {
+	status: string;
+	data: {
+		aqi: number;
+		idx: number;
+		attribution: Array<{
+			url: string;
+			name: string;
+		}>;
+		city: {
+			geo: number[];
+			name: string;
+			url: string;
+		};
+		dominentpol: string;
+		iaqi: {
+			pm2_5?: { v: number };
+			pm10?: { v: number };
+			no2?: { v: number };
+			o3?: { v: number };
+			co?: { v: number };
+			so2?: { v: number };
+			t?: { v: number };
+			h?: { v: number };
+			p?: { v: number };
+		};
+		time: {
+			s: string;
+			tz: string;
+			v: number;
+		};
 	};
 }
 
 /**
- * Geocoding response from OpenWeatherMap Geocoding API
+ * AQICN Geo Search Response
  */
-export interface GeocodingResponse {
-	name: string;
-	lat: number;
-	lon: number;
-	country: string;
-	state?: string;
-}
-
-export interface ZipcodeGeocodingResponse {
-	zip: string;
-	name: string;
-	lat: number;
-	lon: number;
-	country: string;
+export interface AqicnGeoResponse {
+	status: string;
+	data: Array<{
+		uid: number;
+		aqi: string;
+		station: {
+			name: string;
+			geo: number[];
+			url: string;
+		};
+	}>;
 }
 
 /**
@@ -52,10 +61,8 @@ export interface ProcessedAqiData {
 	aqiLevel: string;
 	pm2_5: number;
 	pm10: number;
-	co: number;
-	no2: number;
-	o3: number;
-	so2: number;
+	temperature?: number;
+	humidity?: number;
 	lastUpdate: string;
 }
 

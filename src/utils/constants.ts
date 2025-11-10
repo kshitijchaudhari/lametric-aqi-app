@@ -1,5 +1,6 @@
 /**
- * AQI Level Descriptions
+ * AQI Level Descriptions (AQICN Scale: 0-500)
+ * Mapped to LaMetric 1-5 scale for display
  */
 export const AQI_LEVELS = {
 	1: "Good",
@@ -10,37 +11,32 @@ export const AQI_LEVELS = {
 };
 
 /**
- * AQI Level Emojis/Icons for LaMetric
- * LaMetric uses numeric icon IDs. These are common IDs for weather/air quality
+ * AQICN API converts 0-500 scale to 1-5 for LaMetric
  */
-export const AQI_ICONS = {
-	1: 49386, // Good - Green leaf/check icon
-	2: 49387, // Fair - Yellow warning
-	3: 49388, // Moderate - Orange alert
-	4: 49389, // Poor - Red alert
-	5: 49390, // Very Poor - Red danger
+export const AQI_TO_LEVEL = (aqi: number): number => {
+	if (aqi <= 50) return 1; // Good
+	if (aqi <= 100) return 2; // Fair
+	if (aqi <= 150) return 3; // Moderate
+	if (aqi <= 200) return 4; // Poor
+	return 5; // Very Poor
 };
 
 /**
- * Default OpenWeatherMap Air Pollution API endpoint
- * Alternative: AQICN API (aqicn.org)
+ * AQICN API Endpoints (100% Free, No Credit Card Required)
+ * Signup: https://aqicn.org/data-platform/token/
  */
-export const OWM_BASE_URL = "http://api.openweathermap.org/data/2.5";
-export const OWM_GEO_URL = "http://api.openweathermap.org/geo/1.0";
-export const AQICN_BASE_URL = "https://api.waqicn.org";
+export const AQICN_BASE_URL = "https://api.waqi.info";
 
 /**
- * API Keys - should be provided via environment variables
+ * API Keys
  */
 export const API_KEYS = {
-	openWeatherMap: process.env.OWM_API_KEY || "",
-	aqicn: process.env.AQICN_API_KEY || "",
+	aqicn: process.env.AQICN_TOKEN || "",
+	fallback: process.env.FALLBACK_API_KEY || "",
 };
 
 /**
  * LaMetric icon library references
- * PM2.5 = 34945, PM10 = 34946, AQI = 34947
- * Reference: https://developer.lametric.com/icons/library/
  */
 export const LAMETRIC_ICONS = {
 	pm2_5: 34945,
@@ -48,6 +44,17 @@ export const LAMETRIC_ICONS = {
 	aqi: 34947,
 	location: 34835,
 	air_quality: 49386,
+};
+
+/**
+ * AQI Level Emojis/Icons for LaMetric
+ */
+export const AQI_ICONS = {
+	1: 49386, // Good - Green check
+	2: 49387, // Fair - Yellow warning
+	3: 49388, // Moderate - Orange alert
+	4: 49389, // Poor - Red alert
+	5: 49390, // Very Poor - Dark red danger
 };
 
 /**
