@@ -29,7 +29,7 @@ const main = async () => {
 		res.status(404).json({
 			error: "Route not found",
 			message:
-				"Please use /api/aqi?city=CityName or /api/aqi?zipcode=12345 or /api/aqi?lat=40&lon=-73",
+				"Please use /api/aqi?city=CityName or /api/aqi?lat=40&lon=-73",
 		});
 	});
 
@@ -46,7 +46,7 @@ const main = async () => {
 		console.log(`✓ LaMetric AQI App server started on port: ${port}`);
 		console.log(`✓ Base URL: http://localhost:${port}`);
 		console.log(
-			`✓ API Endpoint: http://localhost:${port}/api/aqi?city=YourCity`
+			`✓ API Endpoint: http://localhost:${port}/api/aqi?city=London`
 		);
 	});
 };
